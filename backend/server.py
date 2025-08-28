@@ -139,23 +139,24 @@ async def create_student(
         # Convert image to base64 for storage and OpenAI processing
         image_base64 = base64.b64encode(image_data).decode('utf-8')
         
-        # Use OpenAI Vision to analyze and encode the face
+        # Use OpenAI Vision to analyze and encode the face with enhanced description
         try:
             chat = LlmChat(
                 api_key=os.environ.get('EMERGENT_LLM_KEY'),
                 session_id=f"face_encoding_{uuid.uuid4()}",
-                system_message="You are a facial recognition system. Analyze the face in the image and provide a detailed description that can be used for identification. Focus on distinctive features like facial structure, eye shape, nose shape, etc. Be very specific and detailed."
+                system_message="You are an advanced facial recognition system. Analyze the face in the image and provide a comprehensive description for identification. Focus on: 1) Facial structure (round/oval/square face), 2) Eye characteristics (shape, size, color if visible), 3) Nose features (shape, size), 4) Mouth and lips, 5) Skin tone and complexion, 6) Hair style and color, 7) Any distinctive marks or features, 8) Overall facial proportions. Be very detailed and specific as this will be used for matching in different lighting conditions."
             ).with_model("openai", "gpt-4o")
             
             image_content = ImageContent(image_base64=image_base64)
             
             user_message = UserMessage(
-                text="Analyze this face image and provide a detailed facial description for identification purposes. Include distinctive features that would help identify this person in future images.",
+                text="Analyze this face image and provide a comprehensive facial description for identification purposes. Include all distinctive features that would help identify this person in future images even under different lighting or angles. Be thorough and detailed.",
                 file_contents=[image_content]
             )
             
             face_encoding_response = await chat.send_message(user_message)
             face_encoding = face_encoding_response.strip()
+            print(f"Generated face encoding for {student_name}: {face_encoding[:100]}...")
             
         except Exception as e:
             print(f"OpenAI Vision error: {e}")

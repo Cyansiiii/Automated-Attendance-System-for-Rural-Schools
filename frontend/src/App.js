@@ -449,7 +449,7 @@ function App() {
                           <SelectValue placeholder="Filter by class" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">All Classes</SelectItem>
+                          <SelectItem value="all">All Classes</SelectItem>
                           {classes.map(className => (
                             <SelectItem key={className} value={className}>
                               {className}

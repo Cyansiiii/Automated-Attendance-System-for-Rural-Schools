@@ -221,29 +221,50 @@ async def mark_attendance_with_image(
         if not students:
             raise HTTPException(status_code=404, detail="No students found in this class")
         
-        # Use OpenAI Vision to identify the student
+        # Use OpenAI Vision to identify the student with improved matching
         try:
-            chat = LlmChat(
+            # First, get a description of the face in the attendance image
+            chat_describe = LlmChat(
                 api_key=os.environ.get('EMERGENT_LLM_KEY'),
-                session_id=f"attendance_{uuid.uuid4()}",
-                system_message=f"You are a facial recognition system for attendance. You will be given an image of a student and a list of students with their facial descriptions. Your task is to match the face in the image with one of the students. Return ONLY the student's name that matches, or 'NO_MATCH' if no match is found. Be precise in your matching.\n\nStudents in class {class_name}:\n" + "\n".join([f"- {s['student_name']} (Roll: {s['roll_no']}): {s.get('face_encoding', 'No description')}" for s in students])
+                session_id=f"describe_{uuid.uuid4()}",
+                system_message="You are a facial recognition system. Analyze the face in the image and provide a detailed description focusing on distinctive features like facial structure, eye shape, nose shape, skin tone, hair style, etc. Be very specific and detailed."
             ).with_model("openai", "gpt-4o")
             
             image_content = ImageContent(image_base64=image_base64)
             
-            user_message = UserMessage(
-                text="Identify which student from the class list matches the face in this image. Return ONLY the student's name or 'NO_MATCH'.",
+            describe_message = UserMessage(
+                text="Analyze this face image and provide a detailed facial description focusing on distinctive features.",
                 file_contents=[image_content]
             )
             
-            recognition_result = await chat.send_message(user_message)
-            recognized_name = recognition_result.strip()
+            current_face_description = await chat_describe.send_message(describe_message)
+            print(f"Current face description: {current_face_description}")
             
-            # Find the matching student
+            # Now compare with stored student descriptions using a more flexible approach
+            chat_match = LlmChat(
+                api_key=os.environ.get('EMERGENT_LLM_KEY'),
+                session_id=f"match_{uuid.uuid4()}",
+                system_message=f"You are comparing facial descriptions for attendance matching. You will be given a description of a face from a live photo and descriptions of registered students. Find the BEST MATCH even if not perfect, as lighting and angles may differ. Consider facial structure, features, and overall appearance. Be more lenient in matching as the same person may look different in different conditions.\n\nCurrent face description: {current_face_description}\n\nRegistered students in class {class_name}:\n" + "\n".join([f"- {s['student_name']} (Roll: {s['roll_no']}): {s.get('face_encoding', 'No description')}" for s in students])
+            ).with_model("openai", "gpt-4o")
+            
+            match_message = UserMessage(
+                text="Based on the facial descriptions, which registered student is the BEST MATCH for the current face? Consider that lighting, angles, and photo quality may cause variations. Return ONLY the student's name that best matches, or 'NO_MATCH' if absolutely no reasonable match exists. Be more lenient in matching."
+            )
+            
+            recognition_result = await chat_match.send_message(match_message)
+            recognized_name = recognition_result.strip()
+            print(f"Recognition result: {recognized_name}")
+            
+            # Find the matching student with more flexible name matching
             matched_student = None
             for student in students:
-                if student['student_name'].lower() in recognized_name.lower() and recognized_name.upper() != 'NO_MATCH':
+                student_name_parts = student['student_name'].lower().split()
+                recognized_parts = recognized_name.lower().split()
+                
+                # Check if any part of the recognized name matches any part of student name
+                if any(part in student['student_name'].lower() for part in recognized_parts if len(part) > 2) and recognized_name.upper() != 'NO_MATCH':
                     matched_student = student
+                    print(f"Matched student: {student['student_name']}")
                     break
             
             if not matched_student:

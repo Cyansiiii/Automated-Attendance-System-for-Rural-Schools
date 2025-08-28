@@ -463,15 +463,72 @@ function App() {
                       />
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-4">
                       <Label htmlFor="face_image">Face Image</Label>
-                      <Input
-                        id="face_image"
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => setSelectedImage(e.target.files[0])}
-                        required
-                      />
+                      
+                      {/* Camera Option */}
+                      <div className="space-y-4">
+                        <div className="flex gap-2">
+                          <Button 
+                            type="button"
+                            onClick={startRegistrationCamera} 
+                            disabled={registrationCameraActive}
+                            className="bg-green-600 hover:bg-green-700"
+                            size="sm"
+                          >
+                            <Camera className="h-4 w-4 mr-2" />
+                            Take Photo
+                          </Button>
+                          <Button 
+                            type="button"
+                            onClick={stopRegistrationCamera} 
+                            disabled={!registrationCameraActive}
+                            variant="outline"
+                            size="sm"
+                          >
+                            Stop Camera
+                          </Button>
+                        </div>
+
+                        {registrationCameraActive && (
+                          <div className="space-y-2">
+                            <video
+                              ref={regVideoRef}
+                              autoPlay
+                              className="w-full h-48 object-cover rounded-lg border"
+                            />
+                            <Button 
+                              type="button"
+                              onClick={captureRegistrationPhoto} 
+                              className="w-full bg-blue-600 hover:bg-blue-700"
+                              size="sm"
+                            >
+                              Capture Photo
+                            </Button>
+                          </div>
+                        )}
+                        
+                        <canvas
+                          ref={regCanvasRef}
+                          className="hidden"
+                        />
+                        
+                        <div className="text-center text-gray-500">OR</div>
+                        
+                        {/* File Upload Option */}
+                        <Input
+                          id="face_image"
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setSelectedImage(e.target.files[0])}
+                        />
+                        
+                        {selectedImage && (
+                          <div className="text-sm text-green-600 mt-2">
+                            ✓ Image selected: {selectedImage.name || 'Captured photo'}
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <Button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700">

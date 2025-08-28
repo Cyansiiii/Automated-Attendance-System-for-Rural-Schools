@@ -224,7 +224,7 @@ async def mark_attendance_with_image(
         # Use OpenAI Vision to identify the student
         try:
             chat = LlmChat(
-                api_key=os.environ.get('OPENAI_API_KEY'),
+                api_key=os.environ.get('EMERGENT_LLM_KEY'),
                 session_id=f"attendance_{uuid.uuid4()}",
                 system_message=f"You are a facial recognition system for attendance. You will be given an image of a student and a list of students with their facial descriptions. Your task is to match the face in the image with one of the students. Return ONLY the student's name that matches, or 'NO_MATCH' if no match is found. Be precise in your matching.\n\nStudents in class {class_name}:\n" + "\n".join([f"- {s['student_name']} (Roll: {s['roll_no']}): {s.get('face_encoding', 'No description')}" for s in students])
             ).with_model("openai", "gpt-4o")

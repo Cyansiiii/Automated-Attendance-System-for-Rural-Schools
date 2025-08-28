@@ -194,7 +194,7 @@ function App() {
   };
 
   const filterStudentsByClass = (className) => {
-    if (!className) return students;
+    if (!className || className === "all") return students;
     return students.filter(student => student.class_name === className);
   };
 

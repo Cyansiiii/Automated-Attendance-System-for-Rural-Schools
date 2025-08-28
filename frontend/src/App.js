@@ -144,6 +144,45 @@ function App() {
     }
   };
 
+  // Registration camera functions
+  const startRegistrationCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (regVideoRef.current) {
+        regVideoRef.current.srcObject = stream;
+        setRegistrationCameraActive(true);
+      }
+    } catch (error) {
+      toast.error('Error accessing camera: ' + error.message);
+    }
+  };
+
+  const stopRegistrationCamera = () => {
+    if (regVideoRef.current && regVideoRef.current.srcObject) {
+      const tracks = regVideoRef.current.srcObject.getTracks();
+      tracks.forEach(track => track.stop());
+      setRegistrationCameraActive(false);
+    }
+  };
+
+  const captureRegistrationPhoto = () => {
+    if (regVideoRef.current && regCanvasRef.current) {
+      const canvas = regCanvasRef.current;
+      const video = regVideoRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0);
+      
+      canvas.toBlob(blob => {
+        setSelectedImage(blob);
+        toast.success('Photo captured! Ready for registration.');
+        stopRegistrationCamera();
+      }, 'image/jpeg', 0.8);
+    }
+  };
+
   const capturePhoto = () => {
     if (videoRef.current && canvasRef.current) {
       const canvas = canvasRef.current;

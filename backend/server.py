@@ -142,7 +142,7 @@ async def create_student(
         # Use OpenAI Vision to analyze and encode the face
         try:
             chat = LlmChat(
-                api_key=os.environ.get('OPENAI_API_KEY'),
+                api_key=os.environ.get('EMERGENT_LLM_KEY'),
                 session_id=f"face_encoding_{uuid.uuid4()}",
                 system_message="You are a facial recognition system. Analyze the face in the image and provide a detailed description that can be used for identification. Focus on distinctive features like facial structure, eye shape, nose shape, etc. Be very specific and detailed."
             ).with_model("openai", "gpt-4o")

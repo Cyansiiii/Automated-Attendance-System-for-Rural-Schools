@@ -36,6 +36,7 @@ function App() {
     father_name: ''
   });
   const [selectedImage, setSelectedImage] = useState(null);
+  const [registrationCameraActive, setRegistrationCameraActive] = useState(false);
   
   // Attendance marking
   const [attendanceClass, setAttendanceClass] = useState('');
@@ -43,6 +44,10 @@ function App() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [cameraActive, setCameraActive] = useState(false);
+  
+  // Registration camera refs
+  const regVideoRef = useRef(null);
+  const regCanvasRef = useRef(null);
 
   useEffect(() => {
     fetchDashboardStats();
